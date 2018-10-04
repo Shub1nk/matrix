@@ -3,16 +3,24 @@
     <h1 class="title">Расчет количества доменов</h1>
     <div class="property">
       <div class="property__field">
-        <input type="text" value="Количество ячеек по горизонтали">
-        <input type="text" value="Количество ячеек по вертикали">
-        <input type="text" value="Вероятность от 0.01 до 0.99">
+        V: <input type="text" :class="{error: errorInput.vertical}" v-model.number="vertical" @blur="validateInputProps(vertical, 'v')">
+        H: <input type="text" :class="{error: errorInput.horizontal}" v-model.number="horizontal" @blur="validateInputProps(horizontal, 'h')">
+        %: <input type="text" :class="{error: errorInput.probability}" v-model.number="probability" @blur="validateInputProps(probability, 'p')">
+        <p>Размерность матрицы 
+          <span v-if="(horizontal*vertical) == 0"> не указана</span>
+          <b v-else>{{vertical}} x {{horizontal}} = {{horizontal*vertical}} ячеек. Вероятность {{probability*100}}%</b>
+        </p>
       </div>
-      <button>Отобразить матрицу</button>
-      <button>Автозаполнение</button>
+      <button @click="renderMatrix()" :disabled="(horizontal*vertical) == 0">Отобразить матрицу</button>
+      <button :disabled="probability === ''">Автозаполнение</button>
     </div>
-    <div class="matrica">
-      <div class="matrica__row" v-for="(row, i) in matrica" :key="row[i]">
-        <span class="matrica__cell" v-for="(cell, j) in row" :key="cell[j]">{{cell}}</span>
+    <div class="matrix">
+      <div class="matrix__row" v-for="(row, i) in matrix" :key="row[i]">
+        <span class="matrix__cell" v-for="(cell, j) in row" :key="cell[j]" 
+        @click="updateCell(cell, i, j)"
+        :style="{backgroundColor: (cell === 1) ? 'green' : '', color: (cell === 1) ? 'white' : ''}">
+          {{cell}}
+        </span>
       </div>      
     </div>
     <div class="domen">
@@ -47,14 +55,81 @@ export default {
   name: "app",
   data() {
     return {
-      matrica: [
-        [1, 0, 0, 0, 0], 
-        [1, 0, 0, 1, 0], 
-        [1, 0, 1, 0, 0], 
-        [1, 1, 0, 0, 0], 
-        [1, 1, 0, 1, 0]
-        ]
+      matrix: [],
+      horizontal: "",
+      vertical: "",
+      probability: "",
+      errorInput: {
+        horizontal: "",
+        vertical: "",
+        probability: ""
+      }
     };
+  },
+  methods: {
+    validateInputProps(value, tag) {
+      switch (tag) {
+        case "h": {
+          if (typeof value === "number") {
+            if (value < 2 || value > 40) {
+              this.horizontal = "";
+              this.errorInput.horizontal = true;
+            } else {
+              this.errorInput.horizontal = false;
+            }
+          } else {
+            this.horizontal = "";
+            this.errorInput.horizontal = true;
+          }
+          break;
+        }
+        case "v": {
+          if (typeof value === "number") {
+            if (value < 2 || value > 40) {
+              this.vertical = "";
+              this.errorInput.vertical = true;
+            } else {
+              this.errorInput.vertical = false;
+            }
+          } else {
+            this.vertical = "";
+            this.errorInput.vertical = true;
+          }
+          break;
+        }
+        case "p": {
+          if (typeof value === "number") {
+            if (value < 0.01 || value > 0.99) {
+              this.probability = "";
+              this.errorInput.probability = true;
+            } else {
+              this.errorInput.probability = false;
+            }
+          } else {
+            this.probability = "";
+            this.errorInput.probability = true;
+          }
+          break;
+        }
+      }
+    },
+    renderMatrix() {
+      let matrix = [];
+
+      for (let i = 0; i < this.vertical; i++) {
+        matrix[i] = [];
+        for (let j = 0; j < this.horizontal; j++) {
+          matrix[i][j] = 0;
+          console.log(i + ":" + j + "=" + matrix[i][j]);
+        }
+      }
+
+      this.matrix = matrix;
+    },
+    updateCell(value, i, j) {
+      value = Number(!value);
+      this.$set(this.matrix[i], j, value);
+    }
   }
 };
 </script>
@@ -81,7 +156,7 @@ ul {
 
 body {
   margin: 0 auto;
-  width: 1000px;
+  /* width: 1000px; */
 }
 
 .title {
@@ -111,17 +186,28 @@ body {
   cursor: pointer;
 }
 
-.matrica {
+button:disabled {
+  background: gray;
+  cursor: default;
+}
+
+.matrix {
   margin-bottom: 20px;
 }
 
-.matrica__row {
+.matrix__row {
 }
 
-.matrica__cell {
+.matrix__cell {
   display: inline-block;
-  padding: 15px 20px;
+  padding: 5px 10px;
   border: 1px dashed #000;
+  cursor: pointer;
+}
+
+.matrix__cell:hover {
+  background: #000;
+  color: #fff;
 }
 
 .domen {
@@ -143,12 +229,18 @@ body {
 }
 
 .domen__table {
-  margin: 0 auto;  
+  margin: 0 auto;
   border-collapse: collapse;
 }
 
-.domen__table th, .domen__table td {
+.domen__table th,
+.domen__table td {
   padding: 5px 10px;
-  border: 1px solid gray;  
+  border: 1px solid gray;
+}
+
+input.error {
+  border: 1px solid red;
+  box-shadow: 0 0 5px red;
 }
 </style>
