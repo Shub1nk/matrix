@@ -3,20 +3,20 @@
     <h1 class="title">Расчет количества доменов</h1>
     <div class="property">
       <div class="property__field">
-        V: <input type="text" :class="{error: errorInput.vertical}" v-model.number="vertical" @blur="validateInputProps(vertical, 'v')">
-        H: <input type="text" :class="{error: errorInput.horizontal}" v-model.number="horizontal" @blur="validateInputProps(horizontal, 'h')">
-        %: <input type="text" :class="{error: errorInput.probability}" v-model.number="probability" @blur="validateInputProps(probability, 'p')">
+        V: <input type="number" :class="{error: errorInput.vertical}" v-model.number="vertical" @blur="validateInputProps(vertical, 'v')">
+        H: <input type="number" :class="{error: errorInput.horizontal}" v-model.number="horizontal" @blur="validateInputProps(horizontal, 'h')">
+        %: <input type="number" step="0.1" :class="{error: errorInput.probability}" v-model.number="probability" @blur="validateInputProps(probability, 'p')">
         <p>Размерность матрицы 
           <span v-if="(horizontal*vertical) == 0"> не указана</span>
           <b v-else>{{vertical}} x {{horizontal}} = {{horizontal*vertical}} ячеек. Вероятность {{probability*100}}%</b>
         </p>
       </div>
       <button @click="renderMatrix()" :disabled="(horizontal*vertical) == 0">Отобразить матрицу</button>
-      <button :disabled="probability === ''">Автозаполнение</button>
+      <button @click="renderMatrixAuto()" :disabled="probability === ''">Автозаполнение</button>
     </div>
     <div class="matrix">
-      <div class="matrix__row" v-for="(row, i) in matrix" :key="row[i]">
-        <span class="matrix__cell" v-for="(cell, j) in row" :key="cell[j]" 
+      <div class="matrix__row" v-for="(row, i) in matrix">
+        <span class="matrix__cell" v-for="(cell, j) in row"  
         @click="updateCell(cell, i, j)"
         :style="{backgroundColor: (cell === 1) ? 'green' : '', color: (cell === 1) ? 'white' : ''}">
           {{cell}}
@@ -56,9 +56,9 @@ export default {
   data() {
     return {
       matrix: [],
-      horizontal: "",
-      vertical: "",
-      probability: "",
+      horizontal: 10,
+      vertical: 10,
+      probability: 0.1,
       errorInput: {
         horizontal: "",
         vertical: "",
@@ -114,15 +114,48 @@ export default {
       }
     },
     renderMatrix() {
+
       let matrix = [];
 
       for (let i = 0; i < this.vertical; i++) {
         matrix[i] = [];
         for (let j = 0; j < this.horizontal; j++) {
           matrix[i][j] = 0;
-          console.log(i + ":" + j + "=" + matrix[i][j]);
+        }
+      }      
+
+      this.matrix = matrix;
+    },
+    renderMatrixAuto() {
+      let cellsCount = this.vertical * this.horizontal;
+      console.log("Количество ячеек", cellsCount);
+
+      let count = 0;
+
+      var a = [];
+      for (var i = 0; i < cellsCount; i++) a.push(i < cellsCount * this.probability ? 1 : 0);
+
+      let matrix = [];
+
+      var last = cellsCount;
+
+      for (let i = 0; i < this.vertical; i++) {
+        matrix[i] = [];
+        for (let j = 0; j < this.horizontal; j++) {
+
+          let rr = Math.floor(Math.random() * last);
+
+          matrix[i].push(a[rr]);
+
+          if(a[rr])  count++;
+
+          a[rr] = a[--last];
+
+          // matrix[i][j] = Math.random() <= this.probability ? 1 : 0;
         }
       }
+      console.log('----------------------------------------------------')
+      console.log(count, matrix);
 
       this.matrix = matrix;
     },
