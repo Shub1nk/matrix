@@ -8,7 +8,7 @@
         %: <input type="number" step="0.1" :class="{error: errorInput.probability}" v-model.number="probability" @blur="validateInputProps(probability, 'p')">
         <p>Размерность матрицы 
           <span v-if="(horizontal*vertical) == 0"> не указана</span>
-          <b v-else>{{vertical}} x {{horizontal}} = {{horizontal*vertical}} ячеек. Вероятность {{probability*100}}%</b>
+          <b v-else>{{vertical}} x {{horizontal}} = {{horizontal*vertical}} ячеек. Вероятность {{(probability*100).toFixed(0)}}%</b>
         </p>
       </div>
       <button @click="renderMatrix()" :disabled="(horizontal*vertical) == 0">Отобразить матрицу</button>
@@ -192,8 +192,7 @@ body {
   /* width: 1000px; */
 }
 
-.title {
-}
+.title {}
 
 .property {
   margin-bottom: 20px;
@@ -228,8 +227,7 @@ button:disabled {
   margin-bottom: 20px;
 }
 
-.matrix__row {
-}
+.matrix__row {}
 
 .matrix__cell {
   display: inline-block;
