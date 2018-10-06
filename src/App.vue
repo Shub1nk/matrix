@@ -36,16 +36,10 @@
         </tr>
         <tr>
           <td>1.</td>
-          <td>0,5</td>
-          <td>5</td>
-          <td>100</td>
-        </tr>
-        <tr>
-          <td>2.</td>
-          <td>0,75</td>
-          <td>15</td>
-          <td>200</td>
-        </tr>
+          <td>{{probability}}</td>
+          <td>{{countDomens}}</td>
+          <td>{{horizontal*vertical}}</td>
+        </tr>        
       </table>
     </div>
   </div>
@@ -60,11 +54,11 @@ export default {
         [0, 1, 1, 0, 1, 1, 1],
         [1, 0, 1, 0, 0, 1, 1],
         [1, 1, 1, 1, 0, 0, 1],
-        [0, 1, 0, 1, 0, 0 ,1],
+        [0, 1, 0, 1, 0, 0, 1],
         [0, 1, 1, 0, 0, 1, 1],
         [1, 0, 0, 0, 1, 0, 1],
         [1, 1, 1, 1, 1, 1, 1],
-        // [0, 0, 0, 0, 1]
+        [0, 0, 0, 0, 1, 0, 0]
       ],
       horizontal: 10,
       vertical: 10,
@@ -181,21 +175,19 @@ export default {
       ----------------------------`);
 
       let matrix = this.matrix;
-      console.log(matrix);
 
       let groupsDomens = []; // массив групп с доменами
 
       let countGroup = 0;
       let closeCell = [];
 
-      let str = "  -  ";
+      let str = "";
+
       for (let i = 0; i < matrix.length; i++) {
         str += "\n";
 
         for (let j = 0; j < matrix[i].length; ) {
           //переход на следующий ячейку только по определенным
-
-          // console.log('ДЛИННА ПРОВЕРЕННОГО МАССИВА', closeCell.length)
 
           if (closeCell.length === 0) {
             closeCell.push({});
@@ -205,8 +197,6 @@ export default {
             let checkCell = closeCell.filter(
               item => item.v === i && item.h === j
             );
-
-            // console.log('Первое совпадение',checkCell);
 
             if (!matrix[i][j]) {
               closeCell.push({ v: i, h: j });
@@ -229,7 +219,7 @@ export default {
 
                 analyzeСells(matrix, i, j, domen, closeCell);
 
-                console.log("Сформировали домен", domen);
+                console.log("Сформировали домен", domen.id, domen);
 
                 groupsDomens.push(domen);
               }
@@ -243,6 +233,7 @@ export default {
 
       console.log("-----Группировка по доменам-----");
       console.log(groupsDomens);
+      this.countDomens = groupsDomens.length;
       console.log("-----Массив проверенных ячеек-----");
       console.log(closeCell);
     }
@@ -258,26 +249,15 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
   let v = i;
   let h = j;
 
-  console.log("Мои координаты", v, h, "Я содержу", matrix[v][h]);
-
-  closeCell.push({ v: i, h: j });
+  // Ячейку, которую собираемся анализировать на соседства сразу добавляем в группу домена
+  closeCell.push({ v: i, h: j }); 
 
   // СОСЕД СПРАВА
 
   // Если в соседней ячейке есть "1"
-  console.log(
-    "Сосед справа с координатами",
-    v,
-    h + 1,
-    "содержит",
-    matrix[v][h + 1]
-  );
+
   // Здесь нужно проверить, чтобы ячейка для проверки была в диапазоне матрицы;
   if (h < matrix[i].length) {
-    console.log(h, "<", matrix[i].length);
-    console.log("ячейка справа содержит", matrix[v][h + 1]);
-    console.log(matrix[v][h + 1] == true);
-
     // Теперь проверяем, что соседняя ячейка содержит 1;
 
     if (matrix[v][h + 1]) {
@@ -287,20 +267,11 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
         domen.cells.push({ v: v, h: h + 1 });
       }
 
-      console.log("ЕБАТЬ, ПОПАЛ НА 1", matrix[v][h + 1]);
-
       // прежде чем запускать рекурсивную функцию, нужно проверить соседнюю ячейку на совпадение с ячейками из массива с уже проверенными ячейками
-      console.log(
-        "Совпадений",
-        closeCell.filter(item => item.v === v && item.h === h + 1).length + 1
-      );
 
       if (!closeCell.filter(item => item.v === v && item.h === h + 1).length) {
-        console.log("УПС");
         // и запускаем рекурсивную функцию для соседней ячейки
         analyzeСells(matrix, v, h + 1, domen, closeCell);
-      } else {
-        console.log("!!!!!!!!!ALARM!!!!!!!!!");
       }
     }
   }
@@ -310,19 +281,9 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
   // СОСЕД СНИЗУ
 
   // Если в соседней ячейке есть "1"
-  console.log(
-    "Сосед снизу с координатами",
-    v + 1,
-    h,
-    "содержит"
-    // matrix[v + 1][h]
-  );
+
   // Здесь нужно проверить, чтобы ячейка для проверки была в диапазоне матрицы;
   if (v + 1 < matrix.length && h != null) {
-    console.log(v + 1, "<", matrix.length);
-    console.log("ячейка снизу содержит", matrix[v][h + 1]);
-    console.log(matrix[v + 1][h] == true);
-
     // Теперь проверяем, что соседняя ячейка содержит 1;
 
     if (matrix[v + 1][h]) {
@@ -332,40 +293,23 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
         domen.cells.push({ v: v + 1, h: h });
       }
 
-      console.log("ЕБАТЬ, ПОПАЛ НА 1", matrix[v + 1][h]);
-
       // прежде чем запускать рекурсивную функцию, нужно проверить соседнюю ячейку на совпадение с ячейками из массива с уже проверенными ячейками
-      console.log(
-        "Совпадений",
-        closeCell.filter(item => item.v === v + 1 && item.h === h).length + 1
-      );
 
       if (!closeCell.filter(item => item.v === v + 1 && item.h === h).length) {
-        console.log("УПС");
         // и запускаем рекурсивную функцию для соседней ячейки
         analyzeСells(matrix, v + 1, h, domen, closeCell);
-      } else {
-        console.log("!!!!!!!!!ALARM!!!!!!!!!");
       }
     }
   }
 
+  //-------------------------------------------------------------------------------------------------------------------------------------------------
+
   // СОСЕД СЛЕВА
 
   // Если в соседней ячейке есть "1"
-  console.log(
-    "Сосед СЛЕВА с координатами",
-    v,
-    h + 1,
-    "содержит",
-    matrix[v][h - 1]
-  );
+
   // Здесь нужно проверить, чтобы ячейка для проверки была в диапазоне матрицы;
   if (h >= 0) {
-    console.log(h, ">=", 0);
-    console.log("ячейка СЛЕВА содержит", matrix[v][h - 1]);
-    console.log(matrix[v][h - 1] == true);
-
     // Теперь проверяем, что соседняя ячейка содержит 1;
 
     if (matrix[v][h - 1]) {
@@ -375,20 +319,11 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
         domen.cells.push({ v: v, h: h - 1 });
       }
 
-      console.log("ЕБАТЬ, ПОПАЛ НА 1", matrix[v][h - 1]);
-
       // прежде чем запускать рекурсивную функцию, нужно проверить соседнюю ячейку на совпадение с ячейками из массива с уже проверенными ячейками
-      console.log(
-        "Совпадений",
-        closeCell.filter(item => item.v === v && item.h === h - 1).length + 1
-      );
 
       if (!closeCell.filter(item => item.v === v && item.h === h - 1).length) {
-        console.log("УПС");
         // и запускаем рекурсивную функцию для соседней ячейки
         analyzeСells(matrix, v, h - 1, domen, closeCell);
-      } else {
-        console.log("!!!!!!!!!ALARM!!!!!!!!!");
       }
     }
   }
@@ -398,19 +333,9 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
   // СОСЕД СВЕРХУ
 
   // Если в соседней ячейке есть "1"
-  console.log(
-    "Сосед снизу с координатами",
-    v - 1,
-    h,
-    "содержит"
-    // matrix[v + 1][h]
-  );
+
   // Здесь нужно проверить, чтобы ячейка для проверки была в диапазоне матрицы;
   if (v - 1 >= 0 && h != null) {
-    console.log(v - 1, ">=", 0);
-    console.log("ячейка СВЕРХУ содержит", matrix[v-1][h]);
-    console.log(matrix[v-1][h] == true);
-
     // Теперь проверяем, что соседняя ячейка содержит 1;
 
     if (matrix[v - 1][h]) {
@@ -420,126 +345,15 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
         domen.cells.push({ v: v - 1, h: h });
       }
 
-      console.log("ЕБАТЬ, ПОПАЛ НА 1", matrix[v - 1][h]);
-
       // прежде чем запускать рекурсивную функцию, нужно проверить соседнюю ячейку на совпадение с ячейками из массива с уже проверенными ячейками
-      console.log(
-        "Совпадений",
-        closeCell.filter(item => item.v === v - 1 && item.h === h).length + 1
-      );
 
       if (!closeCell.filter(item => item.v === v - 1 && item.h === h).length) {
-        console.log("УПС");
         // и запускаем рекурсивную функцию для соседней ячейки
         analyzeСells(matrix, v - 1, h, domen, closeCell);
-      } else {
-        console.log("!!!!!!!!!ALARM!!!!!!!!!");
       }
     }
   }
-
-  // Проверка соседа справа
-
-  // if (matrix[v][h + 1]) {
-  //   domen.cells.push({ v: v, h: h + 1 });
-
-  //   // console.log("Проверяем соседа справа", v, h + 1);
-
-  //   if (closeCell.filter(item => (item.v === v && item.h === h + 1).length)) {
-  //     closeCell.push({ v: i, h: j + 1 });
-  //     // console.log("ЧТО ТАМ В ПОСЛЕДНЕЙ ЯЧЕЙКЕ",closeCell[closeCell.length-1]);
-  //     // console.log("Мои кординаты", v, h + 1, "я содержу", matrix[v][h + 1]);
-  //     // console.log("--------------------------------------");
-  //     analyzeСells(matrix, v, h + 1, domen, closeCell);
-  //   } else {
-  //     console.log("А соседа уже и не нужно проверять");
-  //   }
-  // }
-
-  // Проверка соседа снизу
-
-  // console.log("Проверяем соседа снизу", v + 1, h);
-  // console.log("До проверки нижнего значения", v + 1, h, matrix[v + 1][h]);
-
-  // if (v + 1 < matrix.length && h != null) {
-  //   // console.log(v+1, "МЕНЬШЕ", matrix.length);
-
-  //   if (matrix[v + 1][h]) {
-  //     domen.cells.push({ v: v + 1, h: h });
-
-  //     // console.log("ЧТО МЫ ЗДЕСЬ ИМЕЕМ ВООБЩЕ",matrix[v+1][h]);
-  //     // console.log("Проверяем соседа снизу", v + 1, h);
-
-  //     if (closeCell.filter(item => (item.v === v + 1 && item.h === h).length)) {
-  //       // console.log("Мои кординаты", v + 1, h, "я содержу", matrix[v + 1][h]);
-  //       // console.log("--------------------------------------");
-  //       analyzeСells(matrix, v + 1, h, domen, closeCell);
-  //     } else {
-  //       console.log("А соседа уже и не нужно проверять");
-  //     }
-  //   }
-  // }
-
-  // Проверка соседа слева
-
-  // console.log("ТЕКУЩАЯ КООРДИНАТА", v, h);
-  // console.log("ПРОВЕРЯЕМ СОСЕДА СЛЕВА", v, h - 1);
-
-  // // if ((v + 1 < matrix.length) && h != null)  {
-
-  // // console.log(v+1, "МЕНЬШЕ", matrix.length);
-
-  // if (matrix[v][h - 1]) {
-  //   domen.cells.push({ v: v, h: h - 1 });
-
-  //   console.log("ЧТО МЫ ЗДЕСЬ ИМЕЕМ ВООБЩЕ", v, h - 1, ":", matrix[v][h - 1]);
-  //   console.log("Проверяем соседа слева", v, h - 1);
-
-  //   for (
-  //     h - 1;
-  //     closeCell.filter(item => item.v === v && item.h === h - 1).length < 0;
-  //     --h
-  //   );
-  //   {
-  //     if (closeCell.filter(item => item.v === v && item.h === h - 1).length) {
-  //       console.log(
-  //         "Мои кординаты",
-  //         v,
-  //         h - 1,
-  //         "я содержу",
-  //         matrix[v][h - 1],
-  //         "!!!!!!!!!!!!!!!!!!!!!!!!Блядь, да проверяли уже эту ячейку",
-  //         "совпадений найдено:",
-  //         closeCell.filter(item => item.v === v && item.h === h).length
-  //       );
-  //       console.log("--------------------------------------");
-
-  //       console.log(h - 1);
-  //       console.log(h);
-  //       console.log(--h);
-  //       console.log(h);
-  //       console.log(
-  //         "а теперь совпадений",
-  //         closeCell.filter(item => item.v === v && item.h === h - 1).length
-  //       );
-
-  //       analyzeСells(matrix, v, h-1, domen, closeCell);
-
-  //     }
-  //   }
-
-  //   // if (!(closeCell.filter(item => (item.v === v && item.h === h))).length) {
-  //   //   // console.log('!!!!!!!!!!!!!!!!!!!!!!!!Блядь, да проверяли уже эту ячейку', 'совпадений найдено:', (closeCell.filter(item => (item.v === v && item.h === h)).length))
-  //   //   // analyzeСells(matrix, v, h - 1, domen, closeCell);
-  //   // } else {
-  //   //   console.log('А вот хуй тебе получи по рылу')
-  //   // }
-  // } else {
-  //   console.log("А соседа уже и не нужно проверять");
-  // }
 }
-
-/* -----------------------------*/
 </script>
 
 <style>
