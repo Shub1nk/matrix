@@ -56,11 +56,11 @@ export default {
   data() {
     return {
       matrix: [
-        [0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0]
+        [0, 1, 1, 0, 1],
+        [1, 1, 0, 1, 0],
+        [0, 1, 0, 1, 0]
+        // [0, 1, 1, 0, 0],
+        // [0, 0, 0, 0, 1]
       ],
       horizontal: 10,
       vertical: 10,
@@ -187,45 +187,71 @@ export default {
       let countGroup = 0;
       let closeCell = [];
 
+      let n = 0;
+
       let str = "  -  ";
       for (let i = 0; i < matrix.length; i++) {
         str += "\n";
 
-        for (let j = 0; j < matrix[i].length; j++) {
+        for (let j = 0; j < matrix[i].length; ) {
+          //переход на следующий ячейку только по определенным
           str += matrix[i][j] + " ";
 
-          closeCell.push({ v: i, h: j });
+          // console.log('Длинна массива до', closeCell.length);
 
-          if (matrix[i][j]) {                                                                       // Если в ячейке 1, тогда создаем домен и заполняем его ячейками
-            var domen = {};
-            domen.id = ++countGroup;
-            // console.log(domen.cells == undefined);
+          if (closeCell.length === 0) {
+            closeCell.push({ v: i, h: j });
+            j++;
+            // console.log("Массив проверенных ячеек", closeCell);
+          } else {
+            // console.log(closeCell, i, j);
 
-            if (!domen.cells) {                                                                     // инициализируем массив для координат "1"
-              domen.cells = [];
+            // console.log('Длинна массива после', closeCell.length);
+
+            // closeCell.find(item => {
+            //   item.v === i && item.h === j
+            //     ? console.log(i + "=" + item.v, j + "=" + item.h, true)
+            //     : console.log(i + "=" + item.v, j + "=" + item.h, false);
+            // });
+
+            let checkCell = closeCell.filter(
+              item => item.v === i && item.h === j
+            );
+
+            // console.log("Проверяем ячейку ", i, j, matrix[i][j]);
+
+            // console.log(n, checkCell, checkCell.length);
+            n++;
+
+            if (!matrix[i][j]) {
+              closeCell.push({ v: i, h: j });
             }
 
-            domen.cells.push({ v: i, h: j });                                                       // добавляем координату в массив ячеек
+            if (!checkCell.length) {
+              if (matrix[i][j]) {
+                // Если в ячейке 1, тогда создаем домен и заполняем его ячейками
+                var domen = {};
+                domen.id = ++countGroup;
 
-            // console.log('ячейка справа содержит ', matrix[i][j+1]);
-            // console.log('ячейка слева содержит ', matrix[i][j-1]);
-            // console.log('ячейка сверху содержит ', matrix[i-1][j]);
-            // console.log('ячейка снизу содержит ', matrix[i+1][j]);
+                if (!domen.cells) {
+                  // инициализируем массив для координат "1"
+                  domen.cells = [];
+                }
 
-            analyzeСells(matrix, i, j, domen);
+                // добавляем координату в массив ячеек
 
-            console.log("Сформировали домен", domen);
-            
-            groupsDomens.push(domen);
+                domen.cells.push({ v: i, h: j });
 
-// if (matrix[i][j + 1] === 1) { 
-              // domen.cells.push({v: i, h: j + 1});
-            // }
+                analyzeСells(matrix, i, j, domen, closeCell);
+
+                console.log("Сформировали домен", domen);
+
+                groupsDomens.push(domen);
+              }
+            }
+
+            j++;
           }
-
-          
-
-          
         }
       }
       console.log(str);
@@ -243,36 +269,117 @@ export default {
 
 /* Проверка ячейки на 0 или единицу */
 
-function checkCell(matrix) {
+// function checkCell(matrix) {}
 
-}
+// function findMatch (arr, i, j)
 
 /* Функция анализа соседей */
 
-            function analyzeСells(matrix, i, j, domen) {
-              if (matrix[i][j + 1]) {
-                domen.cells.push({v: i, h: j + 1});
-                analyzeСells(matrix, i, j + 1, domen)
-              }
+function analyzeСells(matrix, i, j, domen, closeCell) {
+  console.log("ДЛИННА МАССИВА ПО ВЕРТИКАЛИ", matrix.length);
 
-              // if (matrix[i][j - 1]) {
-              //   domen.cells.push({v: i, h: j - 1});
-              //   analyzeСells(matrix, i, j - 1, domen)
-              // }
+  let v = i;
+  let h = j;
 
-              // if (matrix[i + 1][j]) {
-              //   domen.cells.push({v: i + 1, h: j});
-              //   analyzeСells(matrix, i + 1, j, domen)
-              // }
+  console.log("Мои координаты", v, h, "Я содержу", matrix[v][h]);
 
-              // if (matrix[i - 1][j]) {
-              //   domen.cells.push({v: i - 1, h: j});
-              //   analyzeСells(matrix, i - 1, j, domen)
-              // }
-            }
+  closeCell.push({ v: i, h: j });
 
-            //------------------------------------------
+  // Проверка соседа справа
 
+  if (matrix[v][h + 1]) {
+    domen.cells.push({ v: v, h: h + 1 });
+
+    console.log("Проверяем соседа справа", v, h + 1);
+
+    if (closeCell.filter(item => (item.v === v && item.h === h + 1).length)) {
+      closeCell.push({ v: i, h: j + 1 });
+      console.log("ЧТО ТАМ В ПОСЛЕДНЕЙ ЯЧЕЙКЕ",closeCell[closeCell.length-1]);
+      console.log("Мои кординаты", v, h + 1, "я содержу", matrix[v][h + 1]);
+      console.log("--------------------------------------");
+      analyzeСells(matrix, v, h + 1, domen, closeCell);
+    } else {
+      console.log("А соседа уже и не нужно проверять");
+    }
+  }
+
+  // Проверка соседа снизу
+
+  console.log("Проверяем соседа снизу", v + 1, h);
+  // console.log("До проверки нижнего значения", v + 1, h, matrix[v + 1][h]);
+
+  if ((v + 1 < matrix.length) && h != null)  {
+
+    console.log(v+1, "МЕНЬШЕ", matrix.length);
+
+    if (matrix[v + 1][h]) {
+      domen.cells.push({ v: v + 1, h: h });
+
+      console.log("ЧТО МЫ ЗДЕСЬ ИМЕЕМ ВООБЩЕ",matrix[v+1][h]);
+      console.log("Проверяем соседа снизу", v + 1, h);
+
+      if (closeCell.filter(item => (item.v === v + 1 && item.h === h).length)) {
+        console.log("Мои кординаты", v + 1, h, "я содержу", matrix[v + 1][h]);
+        console.log("--------------------------------------");
+        analyzeСells(matrix, v + 1, h, domen, closeCell);
+      } else {
+        console.log("А соседа уже и не нужно проверять");
+      }
+    }
+  };
+
+  // // Проверка соседа справа
+
+  // console.log("Проверяем соседа снизу", v, h - 1);
+
+  // // if ((v + 1 < matrix.length) && h != null)  {
+
+  //   console.log(v+1, "МЕНЬШЕ", matrix.length);
+
+  //   if (matrix[v + 1][h]) {
+  //     domen.cells.push({ v: v + 1, h: h });
+
+  //     console.log("ЧТО МЫ ЗДЕСЬ ИМЕЕМ ВООБЩЕ",matrix[v+1][h]);
+  //     console.log("Проверяем соседа снизу", v + 1, h);
+
+  //     if (closeCell.filter(item => (item.v === v + 1 && item.h === h).length)) {
+  //       console.log("Мои кординаты", v + 1, h, "я содержу", matrix[v + 1][h]);
+  //       console.log("--------------------------------------");
+  //       analyzeСells(matrix, v + 1, h, domen, closeCell);
+  //     } else {
+  //       console.log("А соседа уже и не нужно проверять");
+  //     }
+  //   }
+  // // };
+
+  // if (closeCell.filter(item => item.v === i && item.h === j).length) {
+  //   if (matrix[i][h + 1]) {
+  //     domen.cells.push({ v: i, h: h + 1 });
+  //     analyzeСells(matrix, i, h + 1, domen, closeCell);
+  //   }
+  //   if (matrix[i][h - 1]) {
+  //     domen.cells.push({ v: i, h: h - 1 });
+  //     analyzeСells(matrix, i, h - 1, domen, closeCell);
+  //   }
+  // }
+
+  // if (matrix[i][j - 1]) {
+  //   domen.cells.push({v: i, h: j - 1});
+  //   analyzeСells(matrix, i, j - 1, domen)
+  // }
+
+  // if (matrix[i + 1][j]) {
+  //   domen.cells.push({v: i + 1, h: j});
+  //   analyzeСells(matrix, i + 1, j, domen)
+  // }
+
+  // if (matrix[i - 1][j]) {
+  //   domen.cells.push({v: i - 1, h: j});
+  //   analyzeСells(matrix, i - 1, j, domen)
+  // }
+}
+
+//------------------------------------------
 
 /* -----------------------------*/
 </script>
