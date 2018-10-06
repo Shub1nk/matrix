@@ -17,15 +17,15 @@
     <div class="matrix">
       <div class="matrix__row" v-for="(row, i) in matrix">
         <span class="matrix__cell" v-for="(cell, j) in row"  
-        @click="updateCell(cell, i, j)"
-        :style="{backgroundColor: (cell === 1) ? 'green' : '', color: (cell === 1) ? 'white' : ''}">
+        @click="updateCell(cell, i, j)">
           {{cell}}
         </span>
+        <!-- :style="{backgroundColor: (cell === 1) ? 'green' : '', color: (cell === 1) ? 'white' : ''}" -->
       </div>      
     </div>
     <div class="domen">
-      <button class="domen__calc">Посчитать домены</button>
-      <p class="domen__result">В вашей матрице <b class="domen__result__num">100</b> доменов</p>
+      <button class="domen__calc" @click="calculateDomens">Посчитать домены</button>
+      <p class="domen__result">В вашей матрице <b class="domen__result__num">{{countDomens}}</b> доменов</p>
       <table class="domen__table">
         <tr>
           <th>№ п/п</th>
@@ -55,7 +55,13 @@ export default {
   name: "app",
   data() {
     return {
-      matrix: [],
+      matrix: [
+        [0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0]
+      ],
       horizontal: 10,
       vertical: 10,
       probability: 0.1,
@@ -63,7 +69,8 @@ export default {
         horizontal: "",
         vertical: "",
         probability: ""
-      }
+      },
+      countDomens: 0
     };
   },
   methods: {
@@ -114,7 +121,6 @@ export default {
       }
     },
     renderMatrix() {
-
       let matrix = [];
 
       for (let i = 0; i < this.vertical; i++) {
@@ -122,18 +128,19 @@ export default {
         for (let j = 0; j < this.horizontal; j++) {
           matrix[i][j] = 0;
         }
-      }      
+      }
 
       this.matrix = matrix;
     },
     renderMatrixAuto() {
       let cellsCount = this.vertical * this.horizontal;
-      console.log("Количество ячеек", cellsCount);
+      // console.log("Количество ячеек", cellsCount);
 
       let count = 0;
 
       var a = [];
-      for (var i = 0; i < cellsCount; i++) a.push(i < cellsCount * this.probability ? 1 : 0);
+      for (var i = 0; i < cellsCount; i++)
+        a.push(i < cellsCount * this.probability ? 1 : 0);
 
       let matrix = [];
 
@@ -142,29 +149,132 @@ export default {
       for (let i = 0; i < this.vertical; i++) {
         matrix[i] = [];
         for (let j = 0; j < this.horizontal; j++) {
-
           let rr = Math.floor(Math.random() * last);
 
           matrix[i].push(a[rr]);
 
-          if(a[rr])  count++;
+          if (a[rr]) count++;
 
           a[rr] = a[--last];
 
           // matrix[i][j] = Math.random() <= this.probability ? 1 : 0;
         }
       }
-      console.log('----------------------------------------------------')
-      console.log(count, matrix);
+      // console.log('----------------------------------------------------')
+      // console.log(count, matrix);
 
       this.matrix = matrix;
     },
     updateCell(value, i, j) {
       value = Number(!value);
       this.$set(this.matrix[i], j, value);
+    },
+    // Расчет доменов--------------------------------------------
+    calculateDomens() {
+      console.log(`
+      ----------------------------
+          Новый расчет доменов
+      ----------------------------`);
+
+      let matrix = this.matrix;
+      console.log(matrix);
+
+      let groupsDomens = []; // массив групп с доменами
+      // let domens = {
+      //   id: 0, // идентификатор домена
+      //   cell: [] // массив с ячейками
+      // }
+      let countGroup = 0;
+      let closeCell = [];
+
+      let str = "  -  ";
+      for (let i = 0; i < matrix.length; i++) {
+        str += "\n";
+
+        for (let j = 0; j < matrix[i].length; j++) {
+          str += matrix[i][j] + " ";
+
+          closeCell.push({ v: i, h: j });
+
+          if (matrix[i][j]) {                                                                       // Если в ячейке 1, тогда создаем домен и заполняем его ячейками
+            var domen = {};
+            domen.id = ++countGroup;
+            // console.log(domen.cells == undefined);
+
+            if (!domen.cells) {                                                                     // инициализируем массив для координат "1"
+              domen.cells = [];
+            }
+
+            domen.cells.push({ v: i, h: j });                                                       // добавляем координату в массив ячеек
+
+            // console.log('ячейка справа содержит ', matrix[i][j+1]);
+            // console.log('ячейка слева содержит ', matrix[i][j-1]);
+            // console.log('ячейка сверху содержит ', matrix[i-1][j]);
+            // console.log('ячейка снизу содержит ', matrix[i+1][j]);
+
+            analyzeСells(matrix, i, j, domen);
+
+            console.log("Сформировали домен", domen);
+            
+            groupsDomens.push(domen);
+
+// if (matrix[i][j + 1] === 1) { 
+              // domen.cells.push({v: i, h: j + 1});
+            // }
+          }
+
+          
+
+          
+        }
+      }
+      console.log(str);
+
+      console.log("-----Группировка по доменам-----");
+      console.log(groupsDomens);
+      console.log("-----Массив проверенных ячеек-----");
+      console.log(closeCell);
     }
+    //-----------------------------------------------------------
   }
 };
+
+/* Блок вспомогательных функций */
+
+/* Проверка ячейки на 0 или единицу */
+
+function checkCell(matrix) {
+
+}
+
+/* Функция анализа соседей */
+
+            function analyzeСells(matrix, i, j, domen) {
+              if (matrix[i][j + 1]) {
+                domen.cells.push({v: i, h: j + 1});
+                analyzeСells(matrix, i, j + 1, domen)
+              }
+
+              // if (matrix[i][j - 1]) {
+              //   domen.cells.push({v: i, h: j - 1});
+              //   analyzeСells(matrix, i, j - 1, domen)
+              // }
+
+              // if (matrix[i + 1][j]) {
+              //   domen.cells.push({v: i + 1, h: j});
+              //   analyzeСells(matrix, i + 1, j, domen)
+              // }
+
+              // if (matrix[i - 1][j]) {
+              //   domen.cells.push({v: i - 1, h: j});
+              //   analyzeСells(matrix, i - 1, j, domen)
+              // }
+            }
+
+            //------------------------------------------
+
+
+/* -----------------------------*/
 </script>
 
 <style>
@@ -192,7 +302,8 @@ body {
   /* width: 1000px; */
 }
 
-.title {}
+.title {
+}
 
 .property {
   margin-bottom: 20px;
@@ -227,7 +338,8 @@ button:disabled {
   margin-bottom: 20px;
 }
 
-.matrix__row {}
+.matrix__row {
+}
 
 .matrix__cell {
   display: inline-block;
