@@ -18,7 +18,9 @@
       <div class="matrix__row" v-for="(row, i) in matrix">
         <span class="matrix__cell" v-for="(cell, j) in row"  
         @click="updateCell(cell, i, j)"
-        :class="{domens: cell == 1}">
+        :style="{backgroundColor: backgroundCell(i,j)}"
+        >
+        <!-- :class="{domens: cell == 1}" -->
           {{cell}}
         </span>
         <!-- :style="{backgroundColor: (cell === 1) ? 'green' : '', color: (cell === 1) ? 'white' : ''}" -->
@@ -41,6 +43,12 @@
           <td>{{horizontal*vertical}}</td>
         </tr>        
       </table>
+    </div>
+    <div v-if="arrayBackgroundColor.length > 0">
+      <span v-for="background in arrayBackgroundColor" :key="background.id"
+      class="span" :style="{'background-color': background.backgroundColor}">
+        {{background.id}} - {{background.backgroundColor}}
+      </span>
     </div>
   </div>
 </template>
@@ -68,9 +76,15 @@ export default {
         vertical: "",
         probability: ""
       },
-      countDomens: 0
+      countDomens: 0, // походу не использовал это значение
+      arrayBackgroundColor: [
+        // {id: 1, backgroundColor: '#eeeeee'},
+        // {id: 2, backgroundColor: '#333333'},
+      ],
+      groupsDomens: []
     };
   },
+  computed: {},
   methods: {
     validateInputProps(value, tag) {
       switch (tag) {
@@ -236,6 +250,26 @@ export default {
       this.countDomens = groupsDomens.length;
       console.log("-----Массив проверенных ячеек-----");
       console.log(closeCell);
+
+      this.arrayBackgroundColor = paintCells(groupsDomens);
+      this.groupsDomens = groupsDomens;
+      console.log(
+        `-------------------------------------
+         -------------------------------------`
+      );
+      console.log(this.randomarrayBackgroundColor);
+    },
+    backgroundCell(i, j) {
+      // console.log("ВОТ ТЕБЕ ЗДОРОВЫЙ ХУИЩЕ!!", ),
+      console.log(this.groupsDomens);
+
+      // this.groupsDomens.map(item => {
+      //   console.log("ТЕКУЩИЙ ДОМЕН", item);
+      //   item.cells.filter(currentCell => currentCell.v == i && currentCell.h == j);
+      //   console("ТЕКУЩАЯ ЯЧЕЙКА", item.cells);        
+      // });
+
+      // return "blue";
     }
     //-----------------------------------------------------------
   }
@@ -243,14 +277,14 @@ export default {
 
 /* Блок вспомогательных функций */
 
-/* Функция анализа соседей */
+/* ФУНКЦИЯ АНАЛИЗА СОСЕДЕЙ */
 
 function analyzeСells(matrix, i, j, domen, closeCell) {
   let v = i;
   let h = j;
 
   // Ячейку, которую собираемся анализировать на соседства сразу добавляем в группу домена
-  closeCell.push({ v: i, h: j }); 
+  closeCell.push({ v: i, h: j });
 
   // СОСЕД СПРАВА
 
@@ -353,6 +387,31 @@ function analyzeСells(matrix, i, j, domen, closeCell) {
       }
     }
   }
+}
+
+/* ФУНКЦИЯ ФОРМИРОВАНИЯ ЦВЕТОВ ДЛЯ ДОМЕНОВ*/
+function paintCells(arr) {
+  console.log("Доменов для раскрашивания", arr.length);
+  console.log(arr);
+
+  // Создаем переменную для хранения цвета фона
+  let backgroundColor;
+
+  // Обходим массив
+  arr.map(item => {
+    // Чтобы вдруг ячейки не закрасились белым цветом, возьмем цвета только до #999999 - серый
+    backgroundColor = "#" + Math.floor(Math.random() * 10066329).toString(16);
+    // console.log('Получаем число - ', backgroundColor, 'а цвет будет #' + backgroundColor.toString(16));,
+    // console.log('Цвет будет - ' + backgroundColor);
+    // backgroundColor.parseInt(16);
+    // присваиваем элементу новое свойство с hex-цветом
+    item.backgroundColor = backgroundColor;
+    // console.log(item);
+  });
+
+  console.log(arr);
+
+  return arr;
 }
 </script>
 
@@ -469,5 +528,11 @@ input.error {
 .domens {
   background: green;
   color: white;
+}
+
+.span {
+  display: inline-block;
+  padding: 10px;
+  margin: 5px;
 }
 </style>
