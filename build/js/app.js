@@ -1,75 +1,5 @@
-<template>
-  <div id="app">
-    <h1 class="title">Расчет количества доменов</h1>
-    <div class="description">
-      <h2 @click="isDescription = !isDescription">Показать описание</h2>
-      <p v-if="isDescription">
-        <b>V</b> - количество ячеек по вертикали <i>(от 1 до 40)</i><br>
-        <b>H</b> - количество ячеек по горизонтали <i>(от 1 до 40)</i><br>
-        <b>P</b> - плотность заполнения матрицы <b>"1"</b> <i>(от 0.01 до 0.99)</i><br>
-        <br>
-        По умолчанию <b>V,H = 10, P = 0.1</b>. При изменении значения в полях, сразу рассчитывается размерность матрицы и плотность <b>"1"</b><br>
-        <br>
-        Плотность <b>"1"</b> реализуется через алгоритм аналогичный <i>тасованию Фишера-Йетса</i>.<br>
-        <br>
-        При нажатии кнопки <b>"Отобразить матрицу"</b> формируется матрица, заполненная "0"<br>
-        Клик по ячейке меняет значение на противоположное.<br>
-        Чекбокс разрешает/запрещает моментальный рассчет доменов.<br>
-        <br>
-        При нажатии кнопки <b>"Посчитать домены"</b>, запускается алгоритм поиска доменов, результат выводится в таблицу.<br>
-        <br>
-        При нажатии кнопки <b>"Автозаполнение"</b> формируется матрица, запускается поиск доменов, результат попадает в таблицу.<br>
-        <br>
-        Таблица содержит только последние <b>10</b> вычислений
-      </p>
-    </div>
-    <div class="property">
-      <div class="property__field">
-        V: <input type="number" :class="{error: errorInput.vertical}" v-model.number="vertical" @blur="validateInputProps(vertical, 'v')">
-        H: <input type="number" :class="{error: errorInput.horizontal}" v-model.number="horizontal" @blur="validateInputProps(horizontal, 'h')">
-        %: <input type="number" step="0.1" :class="{error: errorInput.probability}" v-model.number="probability" @blur="validateInputProps(probability, 'p')">
-        <p>Размерность матрицы 
-          <span v-if="(horizontal*vertical) == 0"> не указана</span>
-          <b v-else>{{vertical}} x {{horizontal}} = {{horizontal*vertical}} ячеек. Вероятность {{(probability*100).toFixed(0)}}%</b>
-        </p>
-      </div>
-      <button @click="renderMatrix()" :disabled="(horizontal*vertical) == 0">Отобразить матрицу</button>
-      <button @click="renderMatrixAuto()" :disabled="probability === ''">Автозаполнение</button>
-    </div>
-    <div class="matrix">
-      <div class="matrix__row" v-for="(row, i) in matrix">
-        <span class="matrix__cell" v-for="(cell, j) in row"  
-        @click="updateCell(cell, i, j)"
-        :style="{background: test = backgroundCell(i,j)}"
-        >
-          {{cell}}
-        </span>
-      </div>      
-    </div>
-    <label class="is-click-calculate"><input type="checkbox" v-model="isClickCalculate" name="" id=""> Разрешить расчет при клике по ячейке</label>
-    <div class="domen">
-      <button class="domen__calc" @click="calculateDomens">Посчитать домены</button>
-      <p class="domen__result">В вашей матрице <b class="domen__result__num">{{countDomens}}</b> доменов</p>
-      <table class="domen__table">
-        <tr>
-          <th>№ п/п</th>
-          <th>Вероятность</th>
-          <th>Количество доменов в матрице</th>
-          <th>Количество ячеек в матрице</th>
-        </tr>
-        <tr v-for="calc in calculationTable" :key="calc.id">
-          <td>{{calc.id}}.</td>
-          <td>{{calc.probability}}</td>
-          <td>{{calc.domens}}</td>
-          <td>{{calc.cells}}</td>
-        </tr>        
-      </table>
-    </div>    
-  </div>
-</template>
-
-<script>
-export default {
+new Vue({
+  el: "#app",
   name: "app",
   data() {
     return {
@@ -175,7 +105,6 @@ export default {
           if (a[rr]) count++;
 
           a[rr] = a[--last];
-
         }
       }
 
@@ -183,38 +112,35 @@ export default {
       this.calculateDomens();
     },
     updateCell(value, v, h) {
-      
-      value = Number(!value);      
+      value = Number(!value);
       this.$set(this.matrix[v], h, value);
 
       let count = 0;
       let matrix = this.matrix;
-      
+
       for (let i = 0; i < matrix.length; i++) {
         for (let j = 0; j < matrix[i].length; j++) {
           if (matrix[i][j]) {
             ++count;
           }
         }
-      };
+      }
 
       if (value) {
         count++;
       } else {
-        count--
+        count--;
       }
 
+      this.probability =
+        Math.floor((count * 100) / (this.horizontal * this.vertical)) / 100;
 
-      this.probability = Math.floor((count*100)/(this.horizontal*this.vertical))/100;
-
-      if(this.isClickCalculate) {
+      if (this.isClickCalculate) {
         this.calculateDomens();
       }
-      
     },
     // Расчет доменов--------------------------------------------
     calculateDomens() {
-
       let matrix = this.matrix;
 
       let groupsDomens = []; // массив групп с доменами
@@ -302,17 +228,15 @@ export default {
 
       for (let i = 0; i < arr.length; i++) {
         if (arr[i].v == v && arr[i].h == h) {
-
           color = arr[i].backgroundColor;
           return color;
-
         } else {
           color = "#ffffff";
         }
       }
     }
   }
-};
+});
 
 /* Блок вспомогательных функций */
 
@@ -449,153 +373,3 @@ function paintCells(arr) {
 
   return arrayPrintCells;
 }
-</script>
-
-<style>
-#app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #000;
-  margin-top: 60px;
-}
-
-h1,
-h2 {
-  font-weight: normal;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-html {
-}
-
-body {
-  margin: 0 auto;
-  background: #fff;
-}
-
-.title {
-}
-
-.description {
-  width: 700px;
-  margin: 0 auto;
-  /* background: #ccc;
-  border: 1px solid #aaa; */
-  font-size: 12px;
-  color: #333;
-  text-align: left;
-  margin-bottom: 20px;
-  padding: 0 20px;
-}
-
-.description h2 {
-  color: #000;
-  cursor: pointer;
-  text-align: center;
-}
-
-.property {
-  margin-bottom: 20px;
-}
-
-.property__field {
-  margin-bottom: 20px;
-}
-
-.property input {
-  padding: 5px 10px;
-  border: 1px solid gray;
-  border-radius: 5px;
-}
-
-.property button {
-  padding: 10px;
-  border: none;
-  outline: none;
-  color: #fff;
-  background: green;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background: gray;
-  cursor: default;
-}
-
-.matrix {
-  margin-bottom: 20px;
-  min-height: 100px;
-}
-
-.matrix__row {
-}
-
-.matrix__cell {
-  display: inline-block;
-  padding: 5px 10px;
-  border: 1px dashed #000;
-  cursor: pointer;
-}
-
-.matrix__cell:hover {
-  background: #666;
-  color: #fff;
-}
-
-.is-click-calculate {
-  display: block;
-  margin-bottom: 10px;
-}
-
-.domen {
-  margin-bottom: 10px;
-}
-
-.domen__calc {
-  padding: 10px;
-  border: none;
-  outline: none;
-  color: #fff;
-  background: rgb(57, 57, 255);
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.domen__result__num {
-  color: green;
-}
-
-.domen__table {
-  margin: 0 auto;
-  border-collapse: collapse;
-}
-
-.domen__table th,
-.domen__table td {
-  padding: 5px 10px;
-  border: 1px solid gray;
-}
-
-input.error {
-  border: 1px solid red;
-  box-shadow: 0 0 5px red;
-}
-
-.domens {
-  background: green;
-  color: white;
-}
-
-.span {
-  display: inline-block;
-  padding: 10px;
-  margin: 5px;
-}
-</style>

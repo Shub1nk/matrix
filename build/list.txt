@@ -1,0 +1,12 @@
+CSS
+
+./css/style.css
+
+JS
+
+./js/vue.min.js
+./js/app.js
+
+HTML
+
+./index.html

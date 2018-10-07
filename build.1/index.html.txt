@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="./css/style.css" type="text/css" />
+  <script src="./js/vue.min.js"></script>
+  <title>Расчет количества доменов</title>
+</head>
+<body>
+  <div id="app">
+    <h1 class="title">Расчет количества доменов</h1>
+    <div class="description">
+      <h2 @click="isDescription = !isDescription">Показать описание</h2>
+      <p v-if="isDescription">
+        <b>V</b> - количество ячеек по вертикали <i>(от 1 до 40)</i><br>
+        <b>H</b> - количество ячеек по горизонтали <i>(от 1 до 40)</i><br>
+        <b>P</b> - плотность заполнения матрицы <b>"1"</b> <i>(от 0.01 до 0.99)</i><br>
+        <br>
+        По умолчанию <b>V,H = 10, P = 0.1</b>. При изменении значения в полях, сразу рассчитывается размерность матрицы и плотность <b>"1"</b><br>
+        <br>
+        Плотность <b>"1"</b> реализуется через алгоритм аналогичный <i>тасованию Фишера-Йетса</i>.<br>
+        <br>
+        При нажатии кнопки <b>"Отобразить матрицу"</b> формируется матрица, заполненная "0"<br>
+        Клик по ячейке меняет значение на противоположное.<br>
+        Чекбокс разрешает/запрещает моментальный рассчет доменов.<br>
+        <br>
+        При нажатии кнопки <b>"Посчитать домены"</b>, запускается алгоритм поиска доменов, результат выводится в таблицу.<br>
+        <br>
+        При нажатии кнопки <b>"Автозаполнение"</b> формируется матрица, запускается поиск доменов, результат попадает в таблицу.<br>
+        <br>
+        Таблица содержит только последние <b>10</b> вычислений
+      </p>
+    </div>
+    <div class="property">
+      <div class="property__field">
+        V: <input type="number" :class="{error: errorInput.vertical}" v-model.number="vertical" @blur="validateInputProps(vertical, 'v')">
+        H: <input type="number" :class="{error: errorInput.horizontal}" v-model.number="horizontal" @blur="validateInputProps(horizontal, 'h')">
+        %: <input type="number" step="0.1" :class="{error: errorInput.probability}" v-model.number="probability" @blur="validateInputProps(probability, 'p')">
+        <p>Размерность матрицы 
+          <span v-if="(horizontal*vertical) == 0"> не указана</span>
+          <b v-else>{{vertical}} x {{horizontal}} = {{horizontal*vertical}} ячеек. Вероятность {{(probability*100).toFixed(0)}}%</b>
+        </p>
+      </div>
+      <button @click="renderMatrix()" :disabled="(horizontal*vertical) == 0">Отобразить матрицу</button>
+      <button @click="renderMatrixAuto()" :disabled="probability === ''">Автозаполнение</button>
+    </div>
+    <div class="matrix">
+      <div class="matrix__row" v-for="(row, i) in matrix">
+        <span class="matrix__cell" v-for="(cell, j) in row"  
+        @click="updateCell(cell, i, j)"
+        :style="{background: test = backgroundCell(i,j)}"
+        >
+          {{cell}}
+        </span>
+      </div>      
+    </div>
+    <label class="is-click-calculate"><input type="checkbox" v-model="isClickCalculate" name="" id=""> Разрешить расчет при клике по ячейке</label>
+    <div class="domen">
+      <button class="domen__calc" @click="calculateDomens">Посчитать домены</button>
+      <p class="domen__result">В вашей матрице <b class="domen__result__num">{{countDomens}}</b> доменов</p>
+      <table class="domen__table">
+        <tr>
+          <th>№ п/п</th>
+          <th>Вероятность</th>
+          <th>Количество доменов в матрице</th>
+          <th>Количество ячеек в матрице</th>
+        </tr>
+        <tr v-for="calc in calculationTable" :key="calc.id">
+          <td>{{calc.id}}.</td>
+          <td>{{calc.probability}}</td>
+          <td>{{calc.domens}}</td>
+          <td>{{calc.cells}}</td>
+        </tr>        
+      </table>
+    </div>    
+  </div>
+
+  <script src="./js/app.js"></script>
+</body>
+
+</html>
