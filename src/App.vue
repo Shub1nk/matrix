@@ -18,7 +18,7 @@
       <div class="matrix__row" v-for="(row, i) in matrix">
         <span class="matrix__cell" v-for="(cell, j) in row"  
         @click="updateCell(cell, i, j)"
-        :style="{backgroundColor: backgroundCell(i,j)}"
+        :style="{background: test = backgroundCell(i,j)}"
         >
         <!-- :class="{domens: cell == 1}" -->
           {{cell}}
@@ -26,6 +26,7 @@
         <!-- :style="{backgroundColor: (cell === 1) ? 'green' : '', color: (cell === 1) ? 'white' : ''}" -->
       </div>      
     </div>
+    <label class="is-click-calculate"><input type="checkbox" v-model="isClickCalculate" name="" id=""> Разрешить расчет при клике по ячейке</label>
     <div class="domen">
       <button class="domen__calc" @click="calculateDomens">Посчитать домены</button>
       <p class="domen__result">В вашей матрице <b class="domen__result__num">{{countDomens}}</b> доменов</p>
@@ -36,20 +37,14 @@
           <th>Количество доменов в матрице</th>
           <th>Количество ячеек в матрице</th>
         </tr>
-        <tr>
-          <td>1.</td>
-          <td>{{probability}}</td>
-          <td>{{countDomens}}</td>
-          <td>{{horizontal*vertical}}</td>
+        <tr v-for="calc in calculationTable" :key="calc.id">
+          <td>{{calc.id}}.</td>
+          <td>{{calc.probability}}</td>
+          <td>{{calc.domens}}</td>
+          <td>{{calc.cells}}</td>
         </tr>        
       </table>
-    </div>
-    <div v-if="arrayBackgroundColor.length > 0">
-      <span v-for="background in arrayBackgroundColor" :key="background.id"
-      class="span" :style="{'background-color': background.backgroundColor}">
-        {{background.id}} - {{background.backgroundColor}}
-      </span>
-    </div>
+    </div>    
   </div>
 </template>
 
@@ -59,14 +54,16 @@ export default {
   data() {
     return {
       matrix: [
-        [0, 1, 1, 0, 1, 1, 1],
-        [1, 0, 1, 0, 0, 1, 1],
-        [1, 1, 1, 1, 0, 0, 1],
-        [0, 1, 0, 1, 0, 0, 1],
-        [0, 1, 1, 0, 0, 1, 1],
-        [1, 0, 0, 0, 1, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 1, 0, 0]
+        [1, 0],
+        [0, 1]
+        // [0, 1, 1, 0, 1, 1, 1],
+        // [1, 0, 1, 0, 0, 1, 1],
+        // [1, 1, 1, 1, 0, 0, 1],
+        // [0, 1, 0, 1, 0, 0, 1],
+        // [0, 1, 1, 0, 0, 1, 1],
+        // [1, 0, 0, 0, 1, 0, 1],
+        // [1, 1, 1, 1, 1, 1, 1],
+        // [0, 0, 0, 0, 1, 0, 0]
       ],
       horizontal: 10,
       vertical: 10,
@@ -81,7 +78,10 @@ export default {
         // {id: 1, backgroundColor: '#eeeeee'},
         // {id: 2, backgroundColor: '#333333'},
       ],
-      groupsDomens: []
+      groupsDomens: [],
+      calculationTable: [],
+      calculationNumber: 0,
+      isClickCalculate: false
     };
   },
   computed: {},
@@ -133,6 +133,7 @@ export default {
       }
     },
     renderMatrix() {
+      this.arrayBackgroundColor = [];
       let matrix = [];
 
       for (let i = 0; i < this.vertical; i++) {
@@ -145,6 +146,7 @@ export default {
       this.matrix = matrix;
     },
     renderMatrixAuto() {
+      this.arrayBackgroundColor = [];
       let cellsCount = this.vertical * this.horizontal;
       // console.log("Количество ячеек", cellsCount);
 
@@ -176,10 +178,37 @@ export default {
       // console.log(count, matrix);
 
       this.matrix = matrix;
+      this.calculateDomens();
     },
-    updateCell(value, i, j) {
-      value = Number(!value);
-      this.$set(this.matrix[i], j, value);
+    updateCell(value, v, h) {
+      
+      value = Number(!value);      
+      this.$set(this.matrix[v], h, value);
+
+      let count = 0;
+      let matrix = this.matrix;
+      
+      for (let i = 0; i < matrix.length; i++) {
+        for (let j = 0; j < matrix[i].length; j++) {
+          if (matrix[i][j]) {
+            ++count;
+          }
+        }
+      };
+
+      if (value) {
+        count++;
+      } else {
+        count--
+      }
+
+
+      this.probability = Math.floor((count*100)/(this.horizontal*this.vertical))/100;
+
+      if(this.isClickCalculate) {
+        this.calculateDomens();
+      }
+      
     },
     // Расчет доменов--------------------------------------------
     calculateDomens() {
@@ -248,28 +277,59 @@ export default {
       console.log("-----Группировка по доменам-----");
       console.log(groupsDomens);
       this.countDomens = groupsDomens.length;
-      console.log("-----Массив проверенных ячеек-----");
-      console.log(closeCell);
+      // console.log("-----Массив проверенных ячеек-----");
+      // console.log(closeCell);
 
       this.arrayBackgroundColor = paintCells(groupsDomens);
       this.groupsDomens = groupsDomens;
-      console.log(
-        `-------------------------------------
-         -------------------------------------`
-      );
-      console.log(this.randomarrayBackgroundColor);
+
+      // Проверяем таблицу рассчетов
+      // если расчетов больше 10
+      if (this.calculationTable.length <= 10) {
+        // Добавляем рассчет в таблицу
+        this.calculationTable.push({
+          id: ++this.calculationNumber,
+          probability: this.probability,
+          domens: this.countDomens,
+          cells: this.horizontal * this.vertical
+        });
+      } else {
+        this.calculationTable.shift();
+        this.calculationTable.push({
+          id: ++this.calculationNumber,
+          probability: this.probability,
+          domens: this.countDomens,
+          cells: this.horizontal * this.vertical
+        });
+      }
     },
-    backgroundCell(i, j) {
-      // console.log("ВОТ ТЕБЕ ЗДОРОВЫЙ ХУИЩЕ!!", ),
-      console.log(this.groupsDomens);
+    backgroundCell(v, h) {
+      let arr = this.arrayBackgroundColor;
 
-      // this.groupsDomens.map(item => {
-      //   console.log("ТЕКУЩИЙ ДОМЕН", item);
-      //   item.cells.filter(currentCell => currentCell.v == i && currentCell.h == j);
-      //   console("ТЕКУЩАЯ ЯЧЕЙКА", item.cells);        
-      // });
+      // return "gray";
 
-      // return "blue";
+      let color;
+
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i].v == v && arr[i].h == h) {
+          console.log(
+            "Перебор цикла закрашенных ячеек",
+            v + "=" + arr[i].v,
+            h + "=" + arr[i].h,
+            "-",
+            arr[i].backgroundColor
+          );
+
+          color = arr[i].backgroundColor;
+          return color;
+
+          // return arr[i].backgroundColor;
+          // colorarr[i].backgroundColor;
+        } else {
+          color = "#ffffff";
+        }
+      }
+      // return color;
     }
     //-----------------------------------------------------------
   }
@@ -397,21 +457,27 @@ function paintCells(arr) {
   // Создаем переменную для хранения цвета фона
   let backgroundColor;
 
+  let arrayPrintCells = [];
+
   // Обходим массив
   arr.map(item => {
     // Чтобы вдруг ячейки не закрасились белым цветом, возьмем цвета только до #999999 - серый
     backgroundColor = "#" + Math.floor(Math.random() * 10066329).toString(16);
+
+    item.cells.map(cell => {
+      cell.backgroundColor = backgroundColor;
+      arrayPrintCells.push(cell);
+    });
+
     // console.log('Получаем число - ', backgroundColor, 'а цвет будет #' + backgroundColor.toString(16));,
     // console.log('Цвет будет - ' + backgroundColor);
     // backgroundColor.parseInt(16);
     // присваиваем элементу новое свойство с hex-цветом
-    item.backgroundColor = backgroundColor;
+    // item.backgroundColor = backgroundColor;
     // console.log(item);
   });
 
-  console.log(arr);
-
-  return arr;
+  return arrayPrintCells;
 }
 </script>
 
@@ -421,7 +487,7 @@ function paintCells(arr) {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: #000;
   margin-top: 60px;
 }
 
@@ -489,6 +555,11 @@ button:disabled {
 .matrix__cell:hover {
   background: #000;
   color: #fff;
+}
+
+.is-click-calculate {
+  display: block;
+  margin-bottom: 10px;
 }
 
 .domen {
